@@ -11,13 +11,13 @@
 'use strict';
 
 /** The canonical URL for the Safeway digital coupons page. */
-const SAFEWAY_COUPONS_URL = 'https://www.safeway.com/foru/coupons-deals.html';
+const SAFEWAY_COUPONS_URL = 'https://www.safeway.com/loyalty/coupons-deals';
 
 /** Hostname fragment that identifies any Safeway page. */
 const SAFEWAY_HOST = 'safeway.com';
 
 /** URL path fragments that indicate we're on the coupons/deals section. */
-const COUPON_PATH_FRAGMENTS = ['/foru', '/coupon'];
+const COUPON_PATH_FRAGMENTS = ['/loyalty/coupons', '/coupon'];
 
 // ─── DOM references ──────────────────────────────────────────────────────────
 
