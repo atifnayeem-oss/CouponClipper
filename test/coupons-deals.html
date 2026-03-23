@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coupons &amp; Deals — Safeway (Mock)</title>
+  <style>
+    /* ── Reset ───────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      color: #1a1a1a;
+      background: #f5f5f5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ──────────────────────────────────────────────────────────── */
+    .site-header {
+      background: #00843D;
+      color: #fff;
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .site-logo {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #fff;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    .header-nav a {
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 4px 0;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .header-nav a:hover,
+    .header-nav a.active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+
+    .header-spacer { flex: 1; }
+
+    .header-account {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .header-account-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* ── Page hero ───────────────────────────────────────────────────────── */
+    .page-hero {
+      background: linear-gradient(135deg, #005e2b 0%, #00843D 60%, #00a84f 100%);
+      color: #fff;
+      padding: 40px 32px 36px;
+    }
+
+    .page-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .page-hero p {
+      font-size: 16px;
+      opacity: 0.88;
+      max-width: 540px;
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* ── Filter bar ──────────────────────────────────────────────────────── */
+    .filter-bar {
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      margin-right: 4px;
+    }
+
+    .filter-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1.5px solid #d0d0d0;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-btn:hover {
+      border-color: #00843D;
+      color: #00843D;
+    }
+
+    .filter-btn.active {
+      background: #00843D;
+      border-color: #00843D;
+      color: #fff;
+    }
+
+    .filter-spacer { flex: 1; }
+
+    .coupon-count-label {
+      font-size: 13px;
+      color: #777;
+    }
+
+    /* ── Main content ────────────────────────────────────────────────────── */
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 32px 64px;
+    }
+
+    /* ── Coupon grid ─────────────────────────────────────────────────────── */
+    .coupon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── Coupon card ─────────────────────────────────────────────────────── */
+    .coupon-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 2px 12px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .coupon-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.07);
+    }
+
+    .coupon-image {
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      flex-shrink: 0;
+    }
+
+    .coupon-body {
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 6px;
+    }
+
+    .coupon-discount {
+      font-size: 18px;
+      font-weight: 800;
+      color: #00843D;
+      line-height: 1.1;
+    }
+
+    .coupon-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+      line-height: 1.3;
+    }
+
+    .coupon-description {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.35;
+    }
+
+    .coupon-expiry {
+      font-size: 11px;
+      color: #999;
+      margin-top: auto;
+      padding-top: 6px;
+    }
+
+    /* ── Clip button ─────────────────────────────────────────────────────── */
+    .coupon-clip-btn {
+      display: block;
+      width: calc(100% - 28px);
+      margin: 0 14px 14px;
+      padding: 9px 12px;
+      background: #00843D;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s ease, transform 0.1s ease;
+      letter-spacing: 0.2px;
+    }
+
+    .coupon-clip-btn:hover:not(:disabled) {
+      background: #006B31;
+      transform: translateY(-1px);
+    }
+
+    .coupon-clip-btn:active:not(:disabled) {
+      background: #005526;
+      transform: translateY(0);
+    }
+
+    .coupon-clip-btn.clipped,
+    .coupon-clip-btn:disabled {
+      background: #e8f5ee;
+      color: #00843D;
+      cursor: default;
+      transform: none;
+    }
+
+    /* ── Load More button ────────────────────────────────────────────────── */
+    .load-more-wrapper {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .load-more-btn {
+      padding: 13px 40px;
+      background: #fff;
+      color: #00843D;
+      border: 2px solid #00843D;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .load-more-btn:hover {
+      background: #00843D;
+      color: #fff;
+    }
+
+    .load-more-btn:active {
+      background: #006B31;
+      border-color: #006B31;
+      color: #fff;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────────── */
+    .site-footer {
+      background: #1a1a1a;
+      color: #aaa;
+      text-align: center;
+      padding: 24px 32px;
+      font-size: 13px;
+    }
+
+    .site-footer strong {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <a href="#" class="site-logo">Safeway</a>
+    <nav>
+      <ul class="header-nav">
+        <li><a href="#">Shop</a></li>
+        <li><a href="#" class="active">Coupons &amp; Deals</a></li>
+        <li><a href="#">Weekly Ad</a></li>
+        <li><a href="#">Pharmacy</a></li>
+      </ul>
+    </nav>
+    <div class="header-spacer"></div>
+    <div class="header-account">
+      <div class="header-account-avatar">👤</div>
+      <span>Jane D.</span>
+    </div>
+  </header>
+
+  <!-- ── Page hero ───────────────────────────────────────────────────────── -->
+  <section class="page-hero">
+    <h1>Coupons &amp; Deals</h1>
+    <p>Clip digital coupons to your card and save automatically at checkout — no paper needed.</p>
+    <div class="hero-badges">
+      <span class="hero-badge">✓ Savings Card linked</span>
+      <span class="hero-badge">23 Coupons already clipped</span>
+    </div>
+  </section>
+
+  <!-- ── Filter bar ──────────────────────────────────────────────────────── -->
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <button class="filter-btn active">All Coupons</button>
+    <button class="filter-btn">For You</button>
+    <button class="filter-btn">Grocery</button>
+    <button class="filter-btn">Produce</button>
+    <button class="filter-btn">Dairy &amp; Eggs</button>
+    <button class="filter-btn">Beverages</button>
+    <button class="filter-btn">Household</button>
+    <div class="filter-spacer"></div>
+    <span class="coupon-count-label" id="coupon-count-label">Showing 15 coupons</span>
+  </div>
+
+  <!-- ── Main content ─────────────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <div class="coupon-grid" id="coupon-grid">
+
+      <!-- Card 1 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #fff3e0;">🥣</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$1.50 off</div>
+          <div class="coupon-name">General Mills Cheerios</div>
+          <div class="coupon-description">Any variety, 8.9 oz or larger</div>
+          <div class="coupon-expiry">Expires 4/15/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 2 — already clipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #e3f2fd;">🍊</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$2.00 off</div>
+          <div class="coupon-name">Tropicana Orange Juice</div>
+          <div class="coupon-description">52 fl oz, any variety</div>
+          <div class="coupon-expiry">Expires 4/20/26</div>
+        </div>
+        <button class="coupon-clip-btn clipped" data-testid="clip-coupon" disabled>Clipped ✓</button>
+      </div>
+
+      <!-- Card 3 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #fce4ec;">🧺</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$3.00 off</div>
+          <div class="coupon-name">Tide Pods Laundry</div>
+          <div class="coupon-description">31–35 ct, Original or Free & Gentle</div>
+          <div class="coupon-expiry">Expires 4/30/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 4 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #f3e5f5;">🧀</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$1.00 off</div>
+          <div class="coupon-name">Kraft Singles Cheese</div>
+          <div class="coupon-description">16 oz, any flavor</div>
+          <div class="coupon-expiry">Expires 4/10/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 5 — already clipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #e8f5e9;">🥛</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$0.75 off</div>
+          <div class="coupon-name">Horizon Organic Milk</div>
+          <div class="coupon-description">Half gallon, whole or 2%</div>
+          <div class="coupon-expiry">Expires 4/25/26</div>
+        </div>
+        <button class="coupon-clip-btn clipped" data-testid="clip-coupon" disabled>Clipped ✓</button>
+      </div>
+
+      <!-- Card 6 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #fff8e1;">🍝</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">Buy 2 Get 1 Free</div>
+          <div class="coupon-name">Barilla Pasta</div>
+          <div class="coupon-description">12 oz, spaghetti, penne, or rotini</div>
+          <div class="coupon-expiry">Expires 5/1/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 7 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #e0f7fa;">🫙</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$1.25 off</div>
+          <div class="coupon-name">Prego Pasta Sauce</div>
+          <div class="coupon-description">24 oz jar, traditional or chunky</div>
+          <div class="coupon-expiry">Expires 4/18/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 8 — already clipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #f9fbe7;">🥤</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$1.50 off</div>
+          <div class="coupon-name">Gatorade Sports Drink</div>
+          <div class="coupon-description">8-pack, 20 fl oz, any flavor</div>
+          <div class="coupon-expiry">Expires 4/22/26</div>
+        </div>
+        <button class="coupon-clip-btn clipped" data-testid="clip-coupon" disabled>Clipped ✓</button>
+      </div>
+
+      <!-- Card 9 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #fbe9e7;">🥫</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$0.50 off</div>
+          <div class="coupon-name">Campbell's Chunky Soup</div>
+          <div class="coupon-description">18.8 oz can, any variety</div>
+          <div class="coupon-expiry">Expires 4/12/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 10 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #e8eaf6;">🧻</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$2.50 off</div>
+          <div class="coupon-name">Charmin Ultra Soft</div>
+          <div class="coupon-description">Mega roll, 6-pack or larger</div>
+          <div class="coupon-expiry">Expires 5/5/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 11 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #fff3e0;">🍦</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$1.75 off</div>
+          <div class="coupon-name">Breyers Ice Cream</div>
+          <div class="coupon-description">48 oz, natural vanilla or chocolate</div>
+          <div class="coupon-expiry">Expires 4/28/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 12 — already clipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #e0f2f1;">🫒</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$1.00 off</div>
+          <div class="coupon-name">Filippo Berio Olive Oil</div>
+          <div class="coupon-description">16.9 fl oz, extra virgin</div>
+          <div class="coupon-expiry">Expires 4/17/26</div>
+        </div>
+        <button class="coupon-clip-btn clipped" data-testid="clip-coupon" disabled>Clipped ✓</button>
+      </div>
+
+      <!-- Card 13 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #fce4ec;">🧼</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$1.00 off</div>
+          <div class="coupon-name">Dove Body Wash</div>
+          <div class="coupon-description">22 fl oz, any scent</div>
+          <div class="coupon-expiry">Expires 4/30/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 14 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #e3f2fd;">☕</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$2.00 off</div>
+          <div class="coupon-name">Folgers Coffee</div>
+          <div class="coupon-description">22.6 oz canister, Classic Roast</div>
+          <div class="coupon-expiry">Expires 5/10/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+      <!-- Card 15 — unclipped -->
+      <div class="coupon-card">
+        <div class="coupon-image" style="background: #f1f8e9;">🥜</div>
+        <div class="coupon-body">
+          <div class="coupon-discount">$0.75 off</div>
+          <div class="coupon-name">Jif Peanut Butter</div>
+          <div class="coupon-description">16 oz, creamy or crunchy</div>
+          <div class="coupon-expiry">Expires 4/14/26</div>
+        </div>
+        <button class="coupon-clip-btn" data-testid="clip-coupon">Clip</button>
+      </div>
+
+    </div><!-- /.coupon-grid -->
+
+    <!-- Load More -->
+    <div class="load-more-wrapper">
+      <button class="load-more-btn" id="load-more-btn">Load More Coupons</button>
+    </div>
+
+  </main>
+
+  <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <strong>Safeway</strong> — Mock test page for CouponClipper local development. Not affiliated with Safeway Inc.
+  </footer>
+
+  <script>
+    // ── Clip button interaction ─────────────────────────────────────────────
+    //
+    // Delegate click handling to the grid so it also works for dynamically
+    // added cards (loaded via "Load More").
+    //
+    document.getElementById('coupon-grid').addEventListener('click', function (e) {
+      const btn = e.target.closest('.coupon-clip-btn');
+      if (!btn || btn.disabled) return;
+
+      // Simulate a brief network delay then mark as clipped
+      btn.textContent = 'Clipping…';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+
+      setTimeout(function () {
+        btn.textContent = 'Clipped ✓';
+        btn.classList.add('clipped');
+        btn.style.opacity = '';
+      }, 350);
+    });
+
+    // ── Load More ──────────────────────────────────────────────────────────
+    //
+    // Additional coupon data to append when "Load More Coupons" is clicked.
+    //
+    var moreCoupons = [
+      { emoji: '🍞', bg: '#fff8e1', discount: '$1.00 off', name: 'Dave\'s Killer Bread', desc: '20–27 oz, any variety', expiry: '4/30/26', clipped: false },
+      { emoji: '🧃', bg: '#e8f5e9', discount: '$0.75 off', name: 'Minute Maid Juice Box', desc: '10-pack, apple or fruit punch', expiry: '4/25/26', clipped: true },
+      { emoji: '🍕', bg: '#fce4ec', discount: '$2.00 off', name: 'DiGiorno Frozen Pizza', desc: '12 inch, any rising crust variety', expiry: '5/3/26', clipped: false },
+      { emoji: '🥗', bg: '#e0f2f1', discount: '$1.50 off', name: 'Taylor Farms Salad Kit', desc: '11–13 oz bag, any flavor', expiry: '4/16/26', clipped: false },
+      { emoji: '🧈', bg: '#fff3e0', discount: '$0.50 off', name: 'Land O\' Lakes Butter', desc: '1 lb, salted or unsalted', expiry: '4/22/26', clipped: true },
+      { emoji: '🥕', bg: '#f9fbe7', discount: 'Buy 2 Get 1 Free', name: 'Bolthouse Farms Carrots', desc: '2 lb bag, baby peeled', expiry: '4/18/26', clipped: false },
+      { emoji: '🍫', bg: '#f3e5f5', discount: '$1.25 off', name: 'Ghirardelli Chocolate', desc: '3.5 oz bar, any premium variety', expiry: '5/8/26', clipped: false },
+      { emoji: '🥚', bg: '#e3f2fd', discount: '$1.00 off', name: 'Vital Farms Pasture-Raised Eggs', desc: '12 ct, large', expiry: '4/14/26', clipped: false },
+    ];
+
+    var loadMoreBtn = document.getElementById('load-more-btn');
+    var couponGrid = document.getElementById('coupon-grid');
+    var couponCountLabel = document.getElementById('coupon-count-label');
+    var totalCoupons = 15;
+    var moreLoaded = false;
+
+    loadMoreBtn.addEventListener('click', function () {
+      if (moreLoaded) {
+        loadMoreBtn.textContent = 'All coupons loaded';
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.style.opacity = '0.5';
+        loadMoreBtn.style.cursor = 'default';
+        return;
+      }
+
+      moreCoupons.forEach(function (c) {
+        var card = document.createElement('div');
+        card.className = 'coupon-card';
+
+        var clippedAttr = c.clipped ? ' disabled' : '';
+        var clippedClass = c.clipped ? ' clipped' : '';
+        var btnText = c.clipped ? 'Clipped ✓' : 'Clip';
+
+        card.innerHTML =
+          '<div class="coupon-image" style="background:' + c.bg + ';">' + c.emoji + '</div>' +
+          '<div class="coupon-body">' +
+            '<div class="coupon-discount">' + c.discount + '</div>' +
+            '<div class="coupon-name">' + c.name + '</div>' +
+            '<div class="coupon-description">' + c.desc + '</div>' +
+            '<div class="coupon-expiry">Expires ' + c.expiry + '</div>' +
+          '</div>' +
+          '<button class="coupon-clip-btn' + clippedClass + '" data-testid="clip-coupon"' + clippedAttr + '>' + btnText + '</button>';
+
+        couponGrid.appendChild(card);
+      });
+
+      totalCoupons += moreCoupons.length;
+      couponCountLabel.textContent = 'Showing ' + totalCoupons + ' coupons';
+      moreLoaded = true;
+
+      loadMoreBtn.textContent = 'All coupons loaded';
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.style.opacity = '0.5';
+      loadMoreBtn.style.cursor = 'default';
+    });
+  </script>
+
+</body>
+</html>

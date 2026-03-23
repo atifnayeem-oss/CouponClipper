@@ -88,6 +88,49 @@ Make sure you selected the folder containing `manifest.json` (not a subfolder) w
 
 ---
 
+## Development / Local Testing
+
+You can develop and test the extension locally without touching the real Safeway website.
+
+### 1. Start the local dev server
+
+```
+npm run dev
+```
+
+This starts a static file server at `http://localhost:3000` using [serve](https://github.com/vercel/serve). No install step is needed — `npx` downloads it automatically on first run.
+
+### 2. Open the mock coupons page
+
+In Chrome, navigate to:
+
+```
+http://localhost:3000/test/coupons-deals.html
+```
+
+The URL contains `/coupon`, so `isOnCouponsPage()` in `content.js` will match and the extension's floating **✂ Clip All Coupons** button will appear in the bottom-right corner of the page.
+
+The test page simulates Safeway's coupon page with ~15 fake coupon cards (some already clipped, some not), a working "Clip" button interaction on each card, and a **Load More Coupons** button that appends 8 more cards to test lazy-load handling.
+
+### 3. Load the unpacked extension in Chrome
+
+1. Open `chrome://extensions` in Chrome.
+2. Enable **Developer mode** (toggle in the top-right corner).
+3. Click **Load unpacked** and select the root of this repository (the folder containing `manifest.json`).
+4. The CouponClipper extension will appear in your extensions list.
+
+### 4. Iterating on changes
+
+After editing any source file (`src/content.js`, `src/styles.css`, etc.):
+
+1. Go to `chrome://extensions`.
+2. Find the CouponClipper card and click the **reload icon** (↺) in its bottom-right corner.
+3. Switch back to the test page tab and **refresh** (`F5` / `Cmd+R`).
+
+That's it — no ZIP download, no re-packaging required.
+
+---
+
 ## License
 
 MIT — use freely, modify as needed.
