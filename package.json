@@ -1,7 +1,14 @@
 {
   "name": "couponclipper",
   "version": "1.0.0",
+  "description": "Clip all Safeway coupons automatically",
+  "main": "server.js",
   "scripts": {
-    "dev": "npx serve . -p 3000"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer": "^21.0.0"
   }
 }
