@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CouponClipper — Safeway Bulk Coupon Clipper</title>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* Reset & base                                                         */
+    /* ------------------------------------------------------------------ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                   'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+
+      /* Rich green gradient background */
+      background: linear-gradient(135deg, #00843D 0%, #005C2B 55%, #003D1C 100%);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Card                                                                */
+    /* ------------------------------------------------------------------ */
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+      padding: 2.75rem 2.5rem 2.25rem;
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle decorative bar at the top of the card */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #00843D, #34C76A);
+      border-radius: 20px 20px 0 0;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Typography helpers                                                  */
+    /* ------------------------------------------------------------------ */
+    .card-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #1a1a1a;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+    }
+
+    .card-subtitle {
+      margin-top: 0.45rem;
+      font-size: 0.95rem;
+      color: #555;
+      line-height: 1.45;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Login form (view-login)                                             */
+    /* ------------------------------------------------------------------ */
+    #view-login { display: block; }
+
+    .form-group {
+      margin-top: 1.6rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.45rem;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 0.75rem 2.8rem 0.75rem 0.95rem;
+      border: 1.5px solid #d8d8d8;
+      border-radius: 10px;
+      font-size: 1rem;
+      color: #1a1a1a;
+      background: #fafafa;
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+      outline: none;
+    }
+
+    .input-wrap input:focus {
+      border-color: #00843D;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(0, 132, 61, 0.15);
+    }
+
+    /* Password show/hide toggle */
+    .toggle-pw {
+      position: absolute;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #888;
+      padding: 0;
+      line-height: 1;
+      font-size: 1.15rem;
+      transition: color 0.15s;
+    }
+    .toggle-pw:hover { color: #333; }
+
+    /* Main CTA button */
+    .btn-clip {
+      margin-top: 2rem;
+      width: 100%;
+      padding: 0.95rem 1rem;
+      background: linear-gradient(135deg, #00843D 0%, #006830 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
+      box-shadow: 0 4px 16px rgba(0, 132, 61, 0.4);
+    }
+
+    .btn-clip:hover:not(:disabled) {
+      filter: brightness(1.08);
+      box-shadow: 0 6px 22px rgba(0, 132, 61, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-clip:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0, 132, 61, 0.35);
+    }
+
+    .btn-clip:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    /* Disclaimer text */
+    .disclaimer {
+      margin-top: 1.1rem;
+      font-size: 0.75rem;
+      color: #999;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .disclaimer strong { color: #666; }
+
+    /* ------------------------------------------------------------------ */
+    /* Progress view (view-running)                                        */
+    /* ------------------------------------------------------------------ */
+    #view-running  { display: none; }
+    #view-done     { display: none; }
+    #view-error    { display: none; }
+
+    /* Spinner */
+    .spinner-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.4rem;
+    }
+
+    .spinner {
+      width: 54px;
+      height: 54px;
+      border: 5px solid #e0f2e9;
+      border-top-color: #00843D;
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Large clipped counter */
+    .counter-block {
+      text-align: center;
+      margin: 0.5rem 0 1.2rem;
+    }
+
+    .counter-number {
+      font-size: 4rem;
+      font-weight: 900;
+      color: #00843D;
+      line-height: 1;
+      letter-spacing: -2px;
+      /* Pop animation on each update */
+      animation: none;
+    }
+
+    .counter-number.pop {
+      animation: pop 0.25s ease-out forwards;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+
+    .counter-label {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 0.2rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Current status message */
+    #status-message {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #444;
+      min-height: 1.4em;
+      margin-bottom: 0.9rem;
+      font-style: italic;
+    }
+
+    /* Scrollable log */
+    .progress-log {
+      background: #f4f9f6;
+      border: 1px solid #d8eed5;
+      border-radius: 10px;
+      padding: 0.75rem 0.9rem;
+      height: 130px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      color: #556;
+      line-height: 1.7;
+      font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+      /* Fade-in for new lines */
+    }
+
+    .progress-log .log-line {
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-4px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Cancel button */
+    .btn-secondary {
+      margin-top: 1.2rem;
+      width: 100%;
+      padding: 0.72rem 1rem;
+      background: none;
+      border: 1.5px solid #ccc;
+      border-radius: 10px;
+      color: #777;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-secondary:hover {
+      border-color: #999;
+      color: #333;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Done view                                                           */
+    /* ------------------------------------------------------------------ */
+    .icon-done {
+      text-align: center;
+      font-size: 3.5rem;
+      line-height: 1;
+      margin-bottom: 0.7rem;
+      animation: bounceIn 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    @keyframes bounceIn {
+      0%   { transform: scale(0.3); opacity: 0; }
+      55%  { transform: scale(1.12); opacity: 1; }
+      75%  { transform: scale(0.94); }
+      100% { transform: scale(1); }
+    }
+
+    .done-title {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1a1a1a;
+      margin-bottom: 0.35rem;
+    }
+
+    .done-subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #666;
+      margin-bottom: 1.6rem;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Error view                                                          */
+    /* ------------------------------------------------------------------ */
+    .icon-error {
+      text-align: center;
+      font-size: 3.2rem;
+      line-height: 1;
+      margin-bottom: 0.7rem;
+    }
+
+    .error-title {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #c0392b;
+      margin-bottom: 0.4rem;
+    }
+
+    #error-message {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #777;
+      margin-bottom: 1.6rem;
+      line-height: 1.5;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Green "Clip Again" / "Try Again" buttons reuse .btn-clip            */
+    /* ------------------------------------------------------------------ */
+
+    /* ------------------------------------------------------------------ */
+    /* Responsive tweaks                                                   */
+    /* ------------------------------------------------------------------ */
+    @media (max-width: 480px) {
+      .card {
+        padding: 2.2rem 1.6rem 1.8rem;
+        border-radius: 16px;
+      }
+      .card-title { font-size: 1.55rem; }
+      .counter-number { font-size: 3.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- ================================================================ -->
+  <!-- VIEW: Login form                                                  -->
+  <!-- ================================================================ -->
+  <div id="view-login">
+    <h1 class="card-title">✂ CouponClipper</h1>
+    <p class="card-subtitle">Clip all your Safeway coupons in one click — no manual browsing needed.</p>
+
+    <form id="login-form" novalidate>
+      <div class="form-group">
+        <label for="email">Safeway Email</label>
+        <div class="input-wrap">
+          <input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <input
+            id="password"
+            type="password"
+            placeholder="••••••••••"
+            autocomplete="current-password"
+            required
+          />
+          <!-- Show / hide toggle -->
+          <button
+            type="button"
+            class="toggle-pw"
+            aria-label="Toggle password visibility"
+            id="toggle-pw-btn"
+          >👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-clip" id="submit-btn">
+        ✂&nbsp; Clip All Coupons
+      </button>
+    </form>
+
+    <p class="disclaimer">
+      <strong>Your credentials are never stored.</strong><br />
+      They are only used to log in during this session and are discarded
+      immediately. Everything runs locally on your machine.
+    </p>
+  </div><!-- /view-login -->
+
+
+  <!-- ================================================================ -->
+  <!-- VIEW: Running / progress                                          -->
+  <!-- ================================================================ -->
+  <div id="view-running">
+    <div class="spinner-wrap">
+      <div class="spinner" aria-label="Working…"></div>
+    </div>
+
+    <div class="counter-block">
+      <div class="counter-number" id="counter">0</div>
+      <div class="counter-label">Coupons Clipped</div>
+    </div>
+
+    <p id="status-message">Starting up…</p>
+
+    <div class="progress-log" id="progress-log" role="log" aria-live="polite"></div>
+
+    <button class="btn-secondary" onclick="location.reload()">✕&nbsp; Cancel</button>
+  </div><!-- /view-running -->
+
+
+  <!-- ================================================================ -->
+  <!-- VIEW: Done                                                        -->
+  <!-- ================================================================ -->
+  <div id="view-done">
+    <div class="icon-done">✅</div>
+    <h2 class="done-title" id="done-title">All done!</h2>
+    <p class="done-subtitle" id="done-subtitle">Your coupons have been clipped.</p>
+    <button class="btn-clip" onclick="resetToLogin()">✂&nbsp; Clip Again</button>
+  </div><!-- /view-done -->
+
+
+  <!-- ================================================================ -->
+  <!-- VIEW: Error                                                       -->
+  <!-- ================================================================ -->
+  <div id="view-error">
+    <div class="icon-error">⚠️</div>
+    <h2 class="error-title">Something went wrong</h2>
+    <p id="error-message">An unexpected error occurred.</p>
+    <button class="btn-clip" onclick="resetToLogin()">↩&nbsp; Try Again</button>
+  </div><!-- /view-error -->
+
+</div><!-- /card -->
+
+
+<script>
+  // -----------------------------------------------------------------------
+  // View helpers
+  // -----------------------------------------------------------------------
+
+  const VIEWS = ['login', 'running', 'done', 'error'];
+
+  /**
+   * Show exactly one view, hiding the others.
+   * @param {'login'|'running'|'done'|'error'} name
+   */
+  function showView(name) {
+    VIEWS.forEach((v) => {
+      document.getElementById(`view-${v}`).style.display = v === name ? 'block' : 'none';
+    });
+  }
+
+  /** Reset back to the login form (used by "Clip Again" / "Try Again"). */
+  function resetToLogin() {
+    // Clear sensitive fields.
+    document.getElementById('email').value    = '';
+    document.getElementById('password').value = '';
+    document.getElementById('progress-log').innerHTML = '';
+    document.getElementById('counter').textContent    = '0';
+    document.getElementById('status-message').textContent = 'Starting up…';
+    showView('login');
+  }
+
+  // -----------------------------------------------------------------------
+  // Password show / hide toggle
+  // -----------------------------------------------------------------------
+
+  document.getElementById('toggle-pw-btn').addEventListener('click', () => {
+    const input  = document.getElementById('password');
+    const btn    = document.getElementById('toggle-pw-btn');
+    const isText = input.type === 'text';
+    input.type   = isText ? 'password' : 'text';
+    btn.textContent = isText ? '👁' : '🙈';
+    btn.setAttribute('aria-label', isText ? 'Show password' : 'Hide password');
+  });
+
+  // -----------------------------------------------------------------------
+  // Counter animation
+  // -----------------------------------------------------------------------
+
+  let _displayedCount = 0;
+
+  /**
+   * Update the big counter with a brief pop animation.
+   * Only re-renders when the value actually changes.
+   */
+  function setCounter(n) {
+    if (n === _displayedCount) return;
+    _displayedCount = n;
+
+    const el = document.getElementById('counter');
+    el.textContent = n;
+    // Retrigger the CSS animation by removing and re-adding the class.
+    el.classList.remove('pop');
+    // Force a reflow so the browser registers the class removal.
+    void el.offsetWidth;
+    el.classList.add('pop');
+  }
+
+  // -----------------------------------------------------------------------
+  // Progress log
+  // -----------------------------------------------------------------------
+
+  /**
+   * Append a line to the scrollable log and auto-scroll to the bottom.
+   */
+  function appendLog(message) {
+    const log  = document.getElementById('progress-log');
+    const line = document.createElement('div');
+    line.className   = 'log-line';
+    line.textContent = message;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // -----------------------------------------------------------------------
+  // Form submit → POST /clip → open SSE stream
+  // -----------------------------------------------------------------------
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const submitBtn = document.getElementById('submit-btn');
+
+    if (!email || !password) {
+      alert('Please enter your email and password.');
+      return;
+    }
+
+    // Disable button to prevent double-submit.
+    submitBtn.disabled    = true;
+    submitBtn.textContent = 'Starting…';
+
+    try {
+      // POST credentials to start the clipping session.
+      const res  = await fetch('/clip', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Server error: ${res.status}`);
+      }
+
+      const { sessionId } = await res.json();
+
+      if (!sessionId) {
+        throw new Error('Server did not return a session ID.');
+      }
+
+      // Switch to the progress view before opening the SSE stream.
+      showView('running');
+
+      // Open the SSE stream for this session.
+      openProgressStream(sessionId);
+
+    } catch (err) {
+      submitBtn.disabled    = false;
+      submitBtn.textContent = '✂\u00a0 Clip All Coupons';
+      document.getElementById('error-message').textContent =
+        err.message || 'Could not connect to the server.';
+      showView('error');
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Server-Sent Events handler
+  // -----------------------------------------------------------------------
+
+  /**
+   * Opens an SSE connection to /progress/:sessionId and updates the UI
+   * as events arrive.
+   *
+   * Event shape: { type: 'progress'|'done'|'error', message, clipped, total }
+   */
+  function openProgressStream(sessionId) {
+    const es = new EventSource(`/progress/${sessionId}`);
+
+    es.onmessage = (e) => {
+      let event;
+      try {
+        event = JSON.parse(e.data);
+      } catch (_) {
+        return; // malformed event — ignore
+      }
+
+      const { type, message, clipped } = event;
+
+      switch (type) {
+        case 'progress': {
+          // Update status line and counter.
+          document.getElementById('status-message').textContent = message;
+          setCounter(clipped);
+          appendLog(message);
+          break;
+        }
+
+        case 'done': {
+          es.close();
+          // Final counter update.
+          setCounter(clipped);
+
+          // Switch to done view.
+          const plural = clipped === 1 ? 'coupon' : 'coupons';
+          document.getElementById('done-title').textContent =
+            `Done! Clipped ${clipped} ${plural}.`;
+          document.getElementById('done-subtitle').textContent =
+            'All available Safeway coupons have been added to your account.';
+          showView('done');
+          break;
+        }
+
+        case 'error': {
+          es.close();
+          document.getElementById('error-message').textContent =
+            message || 'An unexpected error occurred.';
+          showView('error');
+          break;
+        }
+      }
+    };
+
+    es.onerror = () => {
+      // The SSE connection dropped unexpectedly.
+      es.close();
+      // Only switch to error if we are still in the running view.
+      const running = document.getElementById('view-running');
+      if (running.style.display !== 'none') {
+        document.getElementById('error-message').textContent =
+          'Lost connection to the server. The clipping session may still be running.';
+        showView('error');
+      }
+    };
+  }
+</script>
+
+</body>
+</html>

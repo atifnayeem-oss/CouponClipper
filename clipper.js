@@ -9,7 +9,14 @@
  *   clipCoupons(email, password, onProgress) -> Promise<void>
  */
 
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+
+// Path to the Chromium executable. Falls back to a common Playwright-managed
+// location so the app works without downloading a separate Chrome binary.
+// Override by setting the CHROMIUM_PATH environment variable.
+const CHROMIUM_PATH =
+  process.env.CHROMIUM_PATH ||
+  '/root/.cache/ms-playwright/chromium-1194/chrome-linux/chrome';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -65,6 +72,7 @@ async function clipCoupons(email, password, onProgress) {
     progress('Launching browser…');
     browser = await puppeteer.launch({
       headless: 'new',
+      executablePath: CHROMIUM_PATH,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 

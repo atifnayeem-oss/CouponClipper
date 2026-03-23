@@ -1,47 +1,85 @@
 # CouponClipper — Safeway Bulk Coupon Clipper
 
-A Chrome browser extension that clips every available digital coupon on the Safeway website with a single click. It handles infinite scroll automatically, so even pages with hundreds of coupons are fully processed without any manual effort.
+A Node.js web app that logs in to your Safeway account and automatically clips every available digital coupon. Open the page in any browser, enter your credentials once, and watch the counter climb.
 
 ---
 
 ## What it does
 
-- Injects a floating **✂ Clip All Coupons** button in the bottom-right corner of the Safeway coupons page.
-- Scans the page for every unclipped coupon button using multiple CSS selectors and text-content matching — robust against minor changes to Safeway's HTML structure.
-- Clicks each coupon button with a 300 ms delay between clicks to avoid triggering rate limits.
-- Automatically scrolls down the page to load lazily-rendered coupons and repeats until no new coupons are found after three consecutive scroll attempts.
-- Shows live progress ("Clipping 12 of 47…") on the button badge while running.
-- Displays a completion toast ("Done! Clipped 47 coupons.") when finished.
-- Clicking the button while it is running **cancels** the operation gracefully.
-- Updates the unclipped-coupon count in real time as coupons load (via a `MutationObserver`).
+- Presents a clean login form in your browser at `http://localhost:3000`.
+- Accepts your Safeway email and password, then launches a headless Chrome browser (via Puppeteer) in the background.
+- Logs in to Safeway on your behalf, navigates to the coupons page, and clips every available coupon — scrolling through lazy-loaded content automatically.
+- Streams live progress back to your browser over a Server-Sent Events connection so you can watch the coupon count rise in real time.
+- Displays a final "Done! Clipped X coupons." message when finished.
 
 ---
 
-## Installation (Chrome — Developer Mode)
+## Requirements
 
-Because this extension is not published to the Chrome Web Store, you load it manually as an unpacked extension.
+- **Node.js 18 or newer** — [download here](https://nodejs.org/)
+- A Safeway account with a registered email and password
+- An internet connection (Puppeteer drives the real Safeway website)
 
-1. **Download / clone this repository** to a folder on your computer (e.g. `~/CouponClipper`).
-2. Open Chrome and navigate to `chrome://extensions`.
-3. Enable **Developer mode** using the toggle in the top-right corner of the page.
-4. Click **Load unpacked**.
-5. Select the root folder of this repository (the folder that contains `manifest.json`).
-6. The **CouponClipper** extension will appear in your extensions list with a green scissors icon.
+---
 
-> **Tip:** Pin the extension to your toolbar by clicking the puzzle-piece icon in Chrome's toolbar and clicking the pin next to CouponClipper.
+## Installation
+
+```bash
+git clone <this-repo-url>
+cd CouponClipper
+npm install
+```
+
+`npm install` downloads Express, Puppeteer, and the bundled version of Chromium that Puppeteer manages automatically. The first install may take a minute or two.
+
+---
+
+## Running the app
+
+```bash
+npm start
+```
+
+Then open **http://localhost:3000** in your browser.
+
+For development with auto-restart on file changes:
+
+```bash
+npm run dev
+```
 
 ---
 
 ## How to use
 
-1. Click the CouponClipper toolbar icon to open the popup.
-2. Click **"Go to Safeway Coupons"** — this opens `safeway.com/foru/coupons-deals.html` in the current tab.
-3. Sign in to your Safeway account if prompted, then wait for the coupons page to finish loading.
-4. Click the green **✂ Clip All Coupons** button that appears in the bottom-right corner of the page.
-   - The badge on the button shows how many unclipped coupons are currently visible.
-5. The extension will scroll through the entire page and clip every available coupon automatically.
-6. A toast notification confirms completion: **"Done! Clipped X coupons."**
-7. To stop early, click the button again while it is running — it will cancel after the current coupon finishes.
+1. Run `npm start` and open `http://localhost:3000`.
+2. Enter your Safeway account email and password.
+3. Click **✂ Clip All Coupons**.
+4. Watch the progress — the counter updates as each coupon is clipped.
+5. When the checkmark appears, all available coupons have been added to your account.
+
+---
+
+## Security
+
+**Your credentials are never stored.**
+
+- They are sent over `localhost` (never to any third-party server).
+- The server uses them only to start a Puppeteer session and discards them immediately after — they are never written to disk, logged, or held in memory beyond the duration of the request.
+- Sessions expire automatically after 10 minutes.
+- Everything runs locally on your own machine.
+
+---
+
+## Sharing with friends
+
+Because everything runs locally, sharing is as simple as sharing the code:
+
+1. Your friend clones or downloads this repository.
+2. They run `npm install` once.
+3. They run `npm start` and open `http://localhost:3000` in their browser.
+
+No accounts, no servers, no subscriptions — it runs entirely on their machine.
 
 ---
 
@@ -49,85 +87,28 @@ Because this extension is not published to the Chrome Web Store, you load it man
 
 ```
 CouponClipper/
-├── manifest.json          # Chrome Manifest V3 extension config
-├── icons/
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── src/
-    ├── content.js         # Content script — floating button, clipping logic
-    ├── popup.html         # Extension popup UI
-    ├── popup.js           # Popup logic — tab detection, navigation
-    └── styles.css         # Styles for the floating button and toast notifications
+├── server.js          # Express server — routes, SSE, session management
+├── clipper.js         # Puppeteer automation — login, coupon clipping logic
+├── public/
+│   └── index.html     # Single-page UI — login form, live progress, done/error states
+└── package.json
 ```
-
----
-
-## Permissions
-
-| Permission    | Why it is needed |
-|---------------|-----------------|
-| `activeTab`   | Read the current tab's URL to show the correct status in the popup. |
-| `scripting`   | Reserved for potential future use (programmatic script injection). |
-| `storage`     | Reserved for persisting user preferences in future versions. |
-
-The extension only runs its content script on `*://*.safeway.com/*` — it has no access to any other website.
 
 ---
 
 ## Troubleshooting
 
-**The ✂ button does not appear.**
-Make sure you are on a URL that contains `/foru` or `/coupon` (e.g. `safeway.com/foru/coupons-deals.html`). The button is intentionally hidden on all other pages.
-
-**No coupons are being found.**
-Safeway may have updated their HTML structure. Check the browser console for `[CouponClipper]` log messages. The selectors used are listed in `src/content.js` under `CLIP_SELECTORS`.
-
-**The extension shows an error in `chrome://extensions`.**
-Make sure you selected the folder containing `manifest.json` (not a subfolder) when loading the unpacked extension.
-
----
-
-## Development / Local Testing
-
-You can develop and test the extension locally without touching the real Safeway website.
-
-### 1. Start the local dev server
-
-```
-npm run dev
+**Puppeteer fails to launch Chrome.**
+On some Linux systems you may need additional dependencies. Run:
+```bash
+npx puppeteer browsers install chrome
 ```
 
-This starts a static file server at `http://localhost:3000` using [serve](https://github.com/vercel/serve). No install step is needed — `npx` downloads it automatically on first run.
+**Login fails even with correct credentials.**
+Safeway may have added a CAPTCHA or SMS verification step. Try logging in manually in a normal browser first to dismiss any security challenges, then run CouponClipper again.
 
-### 2. Open the mock coupons page
-
-In Chrome, navigate to:
-
-```
-http://localhost:3000/test/coupons-deals.html
-```
-
-The URL contains `/coupon`, so `isOnCouponsPage()` in `content.js` will match and the extension's floating **✂ Clip All Coupons** button will appear in the bottom-right corner of the page.
-
-The test page simulates Safeway's coupon page with ~15 fake coupon cards (some already clipped, some not), a working "Clip" button interaction on each card, and a **Load More Coupons** button that appends 8 more cards to test lazy-load handling.
-
-### 3. Load the unpacked extension in Chrome
-
-1. Open `chrome://extensions` in Chrome.
-2. Enable **Developer mode** (toggle in the top-right corner).
-3. Click **Load unpacked** and select the root of this repository (the folder containing `manifest.json`).
-4. The CouponClipper extension will appear in your extensions list.
-
-### 4. Iterating on changes
-
-After editing any source file (`src/content.js`, `src/styles.css`, etc.):
-
-1. Go to `chrome://extensions`.
-2. Find the CouponClipper card and click the **reload icon** (↺) in its bottom-right corner.
-3. Switch back to the test page tab and **refresh** (`F5` / `Cmd+R`).
-
-That's it — no ZIP download, no re-packaging required.
+**No coupons are found.**
+Safeway occasionally updates their HTML structure. The selectors used are in `clipper.js` under `CLIP_SELECTORS`. Open an issue or update the selectors to match the new markup.
 
 ---
 
